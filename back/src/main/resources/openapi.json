@@ -1,0 +1,117 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Product Management API",
+    "version": "1.0.0",
+    "description": "API pour la gestion des produits"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api"
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "Liste tous les produits",
+        "responses": {
+          "200": {
+            "description": "Liste des produits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Product" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Crée un nouveau produit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Product" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produit créé",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Product" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Récupère un produit par ID",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produit trouvé",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "404": { "description": "Produit non trouvé" }
+        }
+      },
+      "put": {
+        "summary": "Met à jour un produit existant",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+        },
+        "responses": {
+          "200": { "description": "Produit mis à jour", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
+          "404": { "description": "Produit non trouvé" }
+        }
+      },
+      "delete": {
+        "summary": "Supprime un produit",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "204": { "description": "Produit supprimé" },
+          "404": { "description": "Produit non trouvé" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "code": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "image": { "type": "string" },
+          "category": { "type": "string" },
+          "price": { "type": "number", "format": "double" },
+          "quantity": { "type": "integer" },
+          "internalReference": { "type": "string" },
+          "shellId": { "type": "integer" },
+          "inventoryStatus": { "type": "string", "enum": ["INSTOCK", "LOWSTOCK", "OUTOFSTOCK"] },
+          "rating": { "type": "number", "format": "float" },
+          "createdAt": { "type": "integer", "format": "int64" },
+          "updatedAt": { "type": "integer", "format": "int64" }
+        },
+        "required": ["code", "name", "price", "quantity", "inventoryStatus"]
+      }
+    }
+  }
+}
