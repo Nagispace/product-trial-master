@@ -14,15 +14,15 @@
     "/products": {
       "get": {
         "summary": "Liste tous les produits",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthHeader" }
+        ],
         "responses": {
           "200": {
             "description": "Liste des produits",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Product" }
-                }
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
               }
             }
           }
@@ -30,23 +30,19 @@
       },
       "post": {
         "summary": "Crée un nouveau produit",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthHeader" }
+        ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Product" }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
         },
         "responses": {
           "201": {
             "description": "Produit créé",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Product" }
-              }
-            }
-          }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "403": { "description": "Non autorisé" }
         }
       }
     },
@@ -54,20 +50,20 @@
       "get": {
         "summary": "Récupère un produit par ID",
         "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer", "format": "int64" } },
+          { "$ref": "#/components/parameters/AuthHeader" }
         ],
         "responses": {
-          "200": {
-            "description": "Produit trouvé",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
-          },
-          "404": { "description": "Produit non trouvé" }
+          "200": { "description": "Produit trouvé", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
+          "404": { "description": "Produit non trouvé" },
+          "403": { "description": "Non autorisé" }
         }
       },
       "put": {
         "summary": "Met à jour un produit existant",
         "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer", "format": "int64" } },
+          { "$ref": "#/components/parameters/AuthHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -75,42 +71,112 @@
         },
         "responses": {
           "200": { "description": "Produit mis à jour", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
-          "404": { "description": "Produit non trouvé" }
+          "404": { "description": "Produit non trouvé" },
+          "403": { "description": "Non autorisé" }
         }
       },
       "delete": {
         "summary": "Supprime un produit",
         "parameters": [
-          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" } }
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer", "format": "int64" } },
+          { "$ref": "#/components/parameters/AuthHeader" }
         ],
         "responses": {
           "204": { "description": "Produit supprimé" },
-          "404": { "description": "Produit non trouvé" }
+          "404": { "description": "Produit non trouvé" },
+          "403": { "description": "Non autorisé" }
         }
+      }
+    },
+    "/cart": {
+      "get": {
+        "summary": "Récupère le panier de l'utilisateur connecté",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthHeader" }
+        ],
+        "responses": {
+          "200": { "description": "Panier récupéré", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "403": { "description": "Non autorisé" }
+        }
+      },
+      "post": {
+        "summary": "Ajoute un produit au panier",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+        },
+        "responses": {
+          "200": { "description": "Produit ajouté au panier", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "403": { "description": "Non autorisé" }
+        }
+      }
+    },
+    "/wishlist": {
+      "get": {
+        "summary": "Récupère la wishlist de l'utilisateur connecté",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthHeader" }
+        ],
+        "responses": {
+          "200": { "description": "Wishlist récupérée", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Wishlist" } } } },
+          "403": { "description": "Non autorisé" }
+        }
+      },
+      "post": {
+        "summary": "Ajoute un produit à la wishlist",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+        },
+        "responses": {
+          "200": { "description": "Produit ajouté à la wishlist", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Wishlist" } } } },
+          "403": { "description": "Non autorisé" }
+        }
+      }
+    },
+    "/account": {
+      "post": {
+        "summary": "Créer un compte utilisateur",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } }
+        },
+        "responses": { "201": { "description": "Utilisateur créé" } }
+      }
+    },
+    "/token": {
+      "post": {
+        "summary": "Connexion et génération de token JWT",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": { "200": { "description": "JWT généré", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JwtResponse" } } } } }
       }
     }
   },
   "components": {
     "schemas": {
-      "Product": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer", "format": "int64" },
-          "code": { "type": "string" },
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "image": { "type": "string" },
-          "category": { "type": "string" },
-          "price": { "type": "number", "format": "double" },
-          "quantity": { "type": "integer" },
-          "internalReference": { "type": "string" },
-          "shellId": { "type": "integer" },
-          "inventoryStatus": { "type": "string", "enum": ["INSTOCK", "LOWSTOCK", "OUTOFSTOCK"] },
-          "rating": { "type": "number", "format": "float" },
-          "createdAt": { "type": "integer", "format": "int64" },
-          "updatedAt": { "type": "integer", "format": "int64" }
-        },
-        "required": ["code", "name", "price", "quantity", "inventoryStatus"]
+      "Product": { "type": "object", "x-java-annotations": ["@javax.persistence.Entity","@lombok.Getter","@lombok.Setter"], "properties": { "id": { "type": "integer","format": "int64","x-java-type": "Long","x-java-annotations": ["@javax.persistence.Id","@javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)"] }, "code": { "type": "string" }, "name": { "type": "string" }, "description": { "type": "string" }, "image": { "type": "string" }, "category": { "type": "string" }, "price": { "type": "number","format": "double" }, "quantity": { "type": "integer" }, "internalReference": { "type": "string" }, "shellId": { "type": "integer" }, "inventoryStatus": { "type": "string","enum": ["INSTOCK","LOWSTOCK","OUTOFSTOCK"] }, "rating": { "type": "number","format": "float" }, "createdAt": { "type": "integer","format": "int64" }, "updatedAt": { "type": "integer","format": "int64" } }, "required": ["code","name","price","quantity","inventoryStatus"] },
+      "User": { "type": "object", "x-java-annotations": ["@javax.persistence.Entity","@lombok.Getter","@lombok.Setter"], "properties": { "id": { "type": "integer","format": "int64","x-java-type": "Long","x-java-annotations": ["@javax.persistence.Id","@javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)"] }, "username": { "type": "string" }, "firstname": { "type": "string" }, "email": { "type": "string" }, "password": { "type": "string" } }, "required": ["username","email","password"] },
+      "Cart": { "type": "object", "x-java-annotations": ["@javax.persistence.Entity","@lombok.Getter","@lombok.Setter"], "properties": { "id": { "type": "integer","format": "int64","x-java-type": "Long","x-java-annotations": ["@javax.persistence.Id","@javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)"] }, "user": { "$ref": "#/components/schemas/User" }, "products": { "type": "array","items": { "$ref": "#/components/schemas/Product" } } } },
+      "Wishlist": { "type": "object", "x-java-annotations": ["@javax.persistence.Entity","@lombok.Getter","@lombok.Setter"], "properties": { "id": { "type": "integer","format": "int64","x-java-type": "Long","x-java-annotations": ["@javax.persistence.Id","@javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)"] }, "user": { "$ref": "#/components/schemas/User" }, "products": { "type": "array","items": { "$ref": "#/components/schemas/Product" } } } },
+      "LoginRequest": { "type": "object","properties": { "email": { "type": "string" }, "password": { "type": "string" } },"required": ["email","password"] },
+      "JwtResponse": { "type": "object","properties": { "token": { "type": "string" } } }
+    },
+    "parameters": {
+      "AuthHeader": {
+        "name": "Authorization",
+        "in": "header",
+        "description": "Bearer token JWT",
+        "required": true,
+        "schema": { "type": "string","example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
       }
     }
   }

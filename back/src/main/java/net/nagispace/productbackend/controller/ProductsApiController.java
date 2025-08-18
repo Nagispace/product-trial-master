@@ -1,22 +1,30 @@
 package net.nagispace.productbackend.controller;
 
+import net.nagispace.productbackend.service.AuthService;
 import org.openapitools.api.ProductsApi;
 import org.openapitools.model.Product;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.NativeWebRequest;
+import net.nagispace.productbackend.service.ProductService;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/")
-class ProductsApiController implements ProductsApi {
+public class ProductsApiController implements ProductsApi {
 
-    /**
-     * @return
-     */
+    private final ProductService productService;
+    private final AuthService authService;
+
+    public ProductsApiController(ProductService productService, AuthService authService) {
+        this.productService = productService;
+        this.authService = authService;
+    }
+
     @Override
     public Optional<NativeWebRequest> getRequest() {
         return ProductsApi.super.getRequest();
@@ -24,59 +32,71 @@ class ProductsApiController implements ProductsApi {
 
     /**
      * GET /products : Liste tous les produits
-     *
-     * @return Liste des produits (status code 200)
+     * Nécessite que l'utilisateur soit connecté
      */
     @Override
-    public ResponseEntity<List<Product>> productsGet() {
-        return ProductsApi.super.productsGet();
+    public ResponseEntity<List<Product>> productsGet(String authHeader) {
+        if (!authService.isAuthenticated(authHeader)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<Product> products = productService.getAllProducts();
+        return ResponseEntity.ok(products);
     }
 
     /**
      * DELETE /products/{id} : Supprime un produit
-     *
-     * @param id (required)
-     * @return Produit supprimé (status code 204)
-     * or Produit non trouvé (status code 404)
+     * Nécessite que l'utilisateur soit admin
      */
     @Override
-    public ResponseEntity<Void> productsIdDelete(Integer id) {
-        return ProductsApi.super.productsIdDelete(id);
+    public ResponseEntity<Void> productsIdDelete(Long id, String authHeader) {
+        if (!authService.isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        if (productService.getProductById(id).isPresent()) {
+            productService.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
     /**
      * GET /products/{id} : Récupère un produit par ID
-     *
-     * @param id (required)
-     * @return Produit trouvé (status code 200)
-     * or Produit non trouvé (status code 404)
+     * Nécessite que l'utilisateur soit connecté
      */
     @Override
-    public ResponseEntity<Product> productsIdGet(Integer id) {
-        return ProductsApi.super.productsIdGet(id);
+    public ResponseEntity<Product> productsIdGet(Long id, String authHeader) {
+        if (!authService.isAuthenticated(authHeader)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return productService.getProductById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
      * PUT /products/{id} : Met à jour un produit existant
-     *
-     * @param id      (required)
-     * @param product (required)
-     * @return Produit mis à jour (status code 200)
-     * or Produit non trouvé (status code 404)
+     * Nécessite que l'utilisateur soit admin
      */
     @Override
-    public ResponseEntity<Product> productsIdPut(Integer id, Product product) {
-        return ProductsApi.super.productsIdPut(id, product);
+    public ResponseEntity<Product> productsIdPut(Long id, String authHeader, Product product) {
+        if (!authService.isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return productService.updateProduct(id, product)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
      * POST /products : Crée un nouveau produit
-     *
-     * @param product (required)
-     * @return Produit créé (status code 201)
+     * Nécessite que l'utilisateur soit admin
      */
     @Override
-    public ResponseEntity<Product> productsPost(Product product) {
-        return ProductsApi.super.productsPost(product);
+    public ResponseEntity<Product> productsPost(String authHeader, Product product) {
+        if (!authService.isAdmin(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        Product created = productService.createProduct(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }
