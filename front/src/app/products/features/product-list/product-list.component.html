@@ -1,20 +1,37 @@
 <h1 class="text-center">Liste des produits</h1>
 
-<p-button label="Créer produit" (onClick)="onCreate()" class="block text-center"/>
+<p-button label="Créer produit" (onClick)="onCreate()" class="block text-center" />
 
-<p-dataView #dv [value]="products()">
+<div class="my-4 flex justify-content-between align-items-center">
+  <div class="p-input-icon-left">
+    <i class="pi pi-search"></i>
+    <input type="text"
+           pInputText
+           placeholder="Rechercher..."
+           (input)="onFilter($event)"
+           class="p-inputtext-sm" />
+  </div>
+</div>
+
+<p-dataView #dv
+            [value]="filteredProducts()"
+            [paginator]="true"
+            [rows]="rows()"
+            [first]="first()"
+            [rowsPerPageOptions]="[5, 10, 20]"
+            [totalRecords]="totalFilteredProducts()"
+            (onPage)="onPage($event)">
+
   <ng-template pTemplate="list" let-products>
     @for (product of products; track product) {
       <p-card class="block mb-3">
         <div class="flex gap-4">
-          <!-- Image du produit -->
           <div class="flex-shrink-0">
             <img [src]="product.image || 'assets/placeholder-product.png'"
                  [alt]="product.name"
                  class="w-32 h-32 object-cover rounded-lg border">
           </div>
 
-          <!-- Informations principales -->
           <div class="flex-1">
             <div class="flex items-start mb-2 gap-8">
               <div class="flex-1">
@@ -23,18 +40,16 @@
                 <p class="text-600 text-sm line-height-3">{{ product.description }}</p>
               </div>
 
-              <!-- Prix et stock -->
               <div class="text-right">
                 <div class="text-2xl font-bold text-900 mb-1">{{ product.price | currency:'EUR':'symbol':'1.2-2' }}</div>
                 <div class="flex align-items-center gap-2">
-                                    <span [class]="'px-2 py-1 text-xs font-semibold rounded-full ' + getStockStatusClass(product.inventoryStatus)">
-                                        {{ getStockStatusLabel(product.inventoryStatus) }}
-                                    </span>
+                  <span [class]="'px-2 py-1 text-xs font-semibold rounded-full ' + getStockStatusClass(product.inventoryStatus)">
+                    {{ getStockStatusLabel(product.inventoryStatus) }}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <!-- Rating et informations supplémentaires -->
             <div class="flex justify-between items-center mb-3">
               <div class="flex items-center gap-2">
                 <p-rating [(ngModel)]="product.rating" [readonly]="true" [cancel]="false"></p-rating>
@@ -49,7 +64,6 @@
 
         <ng-template pTemplate="footer">
           <div class="flex justify-between items-center mt-3">
-            <!-- Boutons d'administration -->
             <div class="flex gap-2">
               <p-button label="Modifier"
                         severity="secondary"
@@ -61,7 +75,6 @@
                         (onClick)="onDelete(product)" />
             </div>
 
-            <!-- Section panier -->
             <div class="flex items-center gap-3">
               @if (cartService.isInCart(product.id)) {
                 <div class="flex items-center gap-2">
@@ -70,7 +83,7 @@
                             severity="secondary"
                             size="small"
                             [outlined]="true"
-                            (onClick)="removeFromCart(product)"/>
+                            (onClick)="decreaseQuantity(product.id)"/>
                 </div>
               }
 

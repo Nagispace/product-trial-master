@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from "@angular/core";
+import { Component, OnInit, inject, signal, computed } from "@angular/core";
 import { Product } from "app/products/data-access/product.model";
 import { ProductsService } from "app/products/data-access/products.service";
 import { CartService } from "app/cart/cart.service";
@@ -10,6 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RatingModule } from 'primeng/rating';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 
 const emptyProduct: Product = {
   id: 0,
@@ -54,6 +55,34 @@ export class ProductListComponent implements OnInit {
   public isCreation = false;
   public readonly editedProduct = signal<Product>(emptyProduct);
 
+  public filterValue = signal<string>('');
+  public rows = signal<number>(5);
+  public first = signal<number>(0);
+
+  public readonly filteredProducts = computed(() => {
+    const allProducts = this.products();
+    const filter = this.filterValue();
+
+    return allProducts.filter(product =>
+      product.name.toLowerCase().includes(filter.toLowerCase()) ||
+      product.description.toLowerCase().includes(filter.toLowerCase())
+    );
+  });
+
+  public readonly filteredAndPaginatedProducts = computed(() => {
+    const filteredProducts = this.filteredProducts();
+    const firstRow = this.first();
+    const numRows = this.rows();
+
+    const startIndex = firstRow;
+    const endIndex = startIndex + numRows;
+    return filteredProducts.slice(startIndex, endIndex);
+  });
+
+  public readonly totalFilteredProducts = computed(() => {
+    return this.filteredProducts().length;
+  });
+
   ngOnInit() {
     this.productsService.get().subscribe();
   }
@@ -91,16 +120,19 @@ export class ProductListComponent implements OnInit {
     this.isDialogVisible = false;
   }
 
-  // Méthodes pour la gestion du panier
   public addToCart(product: Product) {
     this.cartService.addToCart(product, 1);
   }
 
-  public removeFromCart(product: Product) {
-    this.cartService.removeFromCart(product.id);
+  public decreaseQuantity(productId: number): void {
+    const currentQuantity = this.cartService.getQuantityInCart(productId);
+    if (currentQuantity > 1) {
+      this.cartService.updateQuantity(productId, currentQuantity - 1);
+    } else {
+      this.cartService.removeFromCart(productId);
+    }
   }
 
-  // Méthodes utilitaires pour l'affichage
   public getStockStatusClass(status: string): string {
     switch (status) {
       case 'INSTOCK':
@@ -125,5 +157,16 @@ export class ProductListComponent implements OnInit {
       default:
         return 'Inconnu';
     }
+  }
+
+  public onFilter(event: Event) {
+    const inputElement = event.target as HTMLInputElement;
+    this.filterValue.set(inputElement.value);
+    this.first.set(0);
+  }
+
+  public onPage(event: any) {
+    this.first.set(event.first);
+    this.rows.set(event.rows);
   }
 }
