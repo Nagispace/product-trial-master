@@ -22,7 +22,7 @@ public class UserService {
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
-    // Create user from DTO
+    
     public User createUser(User userDto) {
         UserEntity entity = toEntity(userDto);
         entity.setPassword(passwordEncoder.encode(entity.getPassword()));
@@ -30,12 +30,12 @@ public class UserService {
         return toDto(saved);
     }
 
-    // Find user by email (returns DTO instead of Entity)
+    
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email).map(this::toDto);
     }
 
-//mapping
+
 
     public User toDto(UserEntity entity) {
         if (entity == null) return null;

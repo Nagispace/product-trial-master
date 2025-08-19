@@ -1,0 +1,99 @@
+<h1 class="text-center">Liste des produits</h1>
+
+<p-button label="Créer produit" (onClick)="onCreate()" class="block text-center"/>
+
+<p-dataView #dv [value]="products()">
+  <ng-template pTemplate="list" let-products>
+    @for (product of products; track product) {
+      <p-card class="block mb-3">
+        <div class="flex gap-4">
+          <!-- Image du produit -->
+          <div class="flex-shrink-0">
+            <img [src]="product.image || 'assets/placeholder-product.png'"
+                 [alt]="product.name"
+                 class="w-32 h-32 object-cover rounded-lg border">
+          </div>
+
+          <!-- Informations principales -->
+          <div class="flex-1">
+            <div class="flex items-start mb-2 gap-8">
+              <div class="flex-1">
+                <span class="text-sm text-600 uppercase font-medium">{{ product.category }}</span>
+                <h3 class="text-xl font-bold text-900 mt-1 mb-2">{{ product.name }}</h3>
+                <p class="text-600 text-sm line-height-3">{{ product.description }}</p>
+              </div>
+
+              <!-- Prix et stock -->
+              <div class="text-right">
+                <div class="text-2xl font-bold text-900 mb-1">{{ product.price | currency:'EUR':'symbol':'1.2-2' }}</div>
+                <div class="flex align-items-center gap-2">
+                                    <span [class]="'px-2 py-1 text-xs font-semibold rounded-full ' + getStockStatusClass(product.inventoryStatus)">
+                                        {{ getStockStatusLabel(product.inventoryStatus) }}
+                                    </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rating et informations supplémentaires -->
+            <div class="flex justify-between items-center mb-3">
+              <div class="flex items-center gap-2">
+                <p-rating [(ngModel)]="product.rating" [readonly]="true" [cancel]="false"></p-rating>
+                <span class="text-sm text-600">({{ product.rating }}/5)</span>
+              </div>
+              <div class="text-sm text-600">
+                Code: {{ product.code }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+          <div class="flex justify-between items-center mt-3">
+            <!-- Boutons d'administration -->
+            <div class="flex gap-2">
+              <p-button label="Modifier"
+                        severity="secondary"
+                        size="small"
+                        (onClick)="onUpdate(product)"/>
+              <p-button label="Supprimer"
+                        severity="danger"
+                        size="small"
+                        (onClick)="onDelete(product)" />
+            </div>
+
+            <!-- Section panier -->
+            <div class="flex items-center gap-3">
+              @if (cartService.isInCart(product.id)) {
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-600">Dans le panier: {{ cartService.getQuantityInCart(product.id) }}</span>
+                  <p-button icon="pi pi-minus"
+                            severity="secondary"
+                            size="small"
+                            [outlined]="true"
+                            (onClick)="removeFromCart(product)"/>
+                </div>
+              }
+
+              <div class="flex-1"></div>
+
+              <p-button [label]="cartService.isInCart(product.id) ? 'Ajouter +1' : 'Ajouter au panier'"
+                        icon="pi pi-shopping-cart"
+                        [disabled]="product.inventoryStatus === 'OUTOFSTOCK'"
+                        (onClick)="addToCart(product)"/>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    }
+  </ng-template>
+</p-dataView>
+
+<p-dialog [(visible)]="isDialogVisible"
+          [style]="{ width: '50vw' }"
+          header="Ajout/Edition produit">
+  <app-product-form
+    [product]="editedProduct()"
+    (save)="onSave($event)"
+    (cancel)="onCancel()"
+  />
+</p-dialog>

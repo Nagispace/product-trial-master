@@ -1,0 +1,48 @@
+<p-toolbar [style]="{ height: '100px' }">
+  <div class="p-toolbar-group-start">
+    <img src="assets/icons/icon-72x72.png" alt="logo" />
+  </div>
+  <div class="p-toolbar-group-center">
+    {{ title }}
+  </div>
+  <div class="p-toolbar-group-end">
+    <div class="relative">
+      <p-button
+        icon="pi pi-shopping-cart"
+        [style]="{ fontSize: '1.5rem' }"
+        [outlined]="true"
+        (onClick)="toggleCart()"
+        [title]="'Panier (' + cartService.totalItems() + ' articles)'">
+      </p-button>
+      @if (cartService.totalItems() > 0) {
+        <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full text-xs w-6 h-6 flex items-center justify-center font-bold">
+                    {{ cartService.totalItems() }}
+                </span>
+      }
+    </div>
+  </div>
+</p-toolbar>
+
+<p-splitter
+  [panelSizes]="[20, 80]"
+  [style]="{ height: 'calc(100vh - 100px)' }">
+  <ng-template pTemplate>
+    <div class="w-full">
+      <app-panel-menu />
+    </div>
+  </ng-template>
+  <ng-template pTemplate>
+    <div class="w-full app-content">
+      <router-outlet></router-outlet>
+    </div>
+  </ng-template>
+</p-splitter>
+
+<!-- Sidebar pour le panier -->
+<p-sidebar
+  [(visible)]="cartVisible"
+  position="right"
+  [style]="{ width: '500px' }"
+  header="Mon Panier">
+  <app-cart></app-cart>
+</p-sidebar>

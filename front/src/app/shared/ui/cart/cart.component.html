@@ -1,0 +1,76 @@
+<div class="p-4">
+  <h2 class="text-2xl font-bold mb-4">Mon Panier</h2>
+
+  @if (cartService.cartItems().length === 0) {
+    <div class="text-center py-8">
+      <i class="pi pi-shopping-cart text-6xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500">Votre panier est vide</p>
+    </div>
+  } @else {
+    <div class="space-y-4">
+      @for (item of cartService.cartItems(); track item.product.id) {
+        <p-card class="w-full">
+          <div class="flex items-center gap-4">
+            <!-- Image -->
+            <img [src]="item.product.image || 'assets/placeholder-product.png'"
+                 [alt]="item.product.name"
+                 class="w-16 h-16 object-cover rounded border">
+
+            <!-- Informations produit -->
+            <div class="flex-1">
+              <h4 class="font-semibold text-lg">{{ item.product.name }}</h4>
+              <p class="text-gray-600 text-sm">{{ item.product.category }}</p>
+              <p class="font-bold text-lg">{{ item.product.price | currency:'EUR':'symbol':'1.2-2' }}</p>
+            </div>
+
+            <!-- Contrôles quantité -->
+            <div class="flex items-center gap-3">
+              <p-button icon="pi pi-minus"
+                        size="small"
+                        [outlined]="true"
+                        (onClick)="decreaseQuantity(item.product.id)"/>
+
+              <span class="mx-2 font-semibold">{{ item.quantity }}</span>
+
+              <p-button icon="pi pi-plus"
+                        size="small"
+                        [outlined]="true"
+                        (onClick)="increaseQuantity(item.product.id)"/>
+            </div>
+
+            <!-- Prix total pour cet item -->
+            <div class="text-right">
+              <p class="font-bold text-lg">
+                {{ (item.product.price * item.quantity) | currency:'EUR':'symbol':'1.2-2' }}
+              </p>
+              <p-button icon="pi pi-trash"
+                        severity="danger"
+                        size="small"
+                        [outlined]="true"
+                        (onClick)="removeItem(item.product.id)"/>
+            </div>
+          </div>
+        </p-card>
+      }
+
+      <!-- Résumé du panier -->
+      <p-card class="mt-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-lg"><strong>Total articles: {{ cartService.totalItems() }}</strong></p>
+            <p class="text-xl font-bold">Total: {{ cartService.totalPrice() | currency:'EUR':'symbol':'1.2-2' }}</p>
+          </div>
+          <div class="flex gap-2">
+            <p-button label="Vider le panier"
+                      severity="secondary"
+                      [outlined]="true"
+                      (onClick)="clearCart()"/>
+            <p-button label="Commander"
+                      severity="success"
+                      (onClick)="checkout()"/>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  }
+</div>
