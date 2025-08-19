@@ -3,41 +3,63 @@ package net.nagispace.productbackend.controller;
 import net.nagispace.productbackend.entity.UserEntity;
 import net.nagispace.productbackend.security.JwtUtil;
 import net.nagispace.productbackend.service.UserService;
-import org.springframework.http.HttpStatus;
+import org.openapitools.api.AccountApi;
+import org.openapitools.api.TokenApi;
+import org.openapitools.model.JwtResponse;
+import org.openapitools.model.LoginRequest;
+import org.openapitools.model.User;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.NativeWebRequest;
+
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/")
-public class AuthController {
+public class AuthController implements AccountApi, TokenApi {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil){
+    public AuthController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/account")
-    public ResponseEntity<UserEntity> createAccount(@RequestBody UserEntity user){
-        UserEntity created = userService.createUser(user);
-        return ResponseEntity.status(201).body(created);
+    /**
+     * @return
+     */
+    @Override
+    public Optional<NativeWebRequest> getRequest() {
+        return AccountApi.super.getRequest();
     }
 
-    @PostMapping("/token")
-    public ResponseEntity<TokenResponse> login(@RequestBody UserEntity login) {
-        // Basic input validation
-        if (login.getEmail() == null || login.getEmail().trim().isEmpty() ||
-                login.getPassword() == null || login.getPassword().trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    // --- AccountApi: create user ---
+    @Override
+    public ResponseEntity<Void> accountPost(User userDto) {
+        UserEntity entity = new UserEntity();
+        entity.setEmail(userDto.getEmail());
+        entity.setUsername(userDto.getUsername());
+        entity.setPassword(userDto.getPassword());
+
+        userService.createUser(userService.toDto(entity));
+        return ResponseEntity.status(201).build();
+    }
+
+    // --- TokenApi: login ---
+    @Override
+    public ResponseEntity<JwtResponse> tokenPost(LoginRequest loginRequest) {
+        if (loginRequest.getEmail() == null || loginRequest.getEmail().trim().isEmpty() ||
+                loginRequest.getPassword() == null || loginRequest.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
 
-        return userService.findByEmail(login.getEmail().trim())
-                .filter(user -> userService.getPasswordEncoder().matches(login.getPassword(), user.getPassword()))
-                .map(user -> ResponseEntity.ok(new TokenResponse(jwtUtil.generateToken(user.getEmail()))))
-                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+        return userService.findByEmail(loginRequest.getEmail().trim())
+                .filter(user -> userService.getPasswordEncoder().matches(loginRequest.getPassword(), user.getPassword()))
+                .map(user -> {
+                    JwtResponse response = new JwtResponse();
+                    response.setToken(jwtUtil.generateToken(user.getEmail()));
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.status(401).build());
     }
-
-    record TokenResponse(String token){}
 }

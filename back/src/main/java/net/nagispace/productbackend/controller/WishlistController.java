@@ -1,50 +1,47 @@
 package net.nagispace.productbackend.controller;
 
+import net.nagispace.productbackend.entity.UserEntity;
+import net.nagispace.productbackend.service.AuthService;
+import net.nagispace.productbackend.service.UserService;
+import net.nagispace.productbackend.service.WishlistService;
 import org.openapitools.api.WishlistApi;
 import org.openapitools.model.Product;
 import org.openapitools.model.Wishlist;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.NativeWebRequest;
-
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/wishlist")
 public class WishlistController implements WishlistApi {
 
-    /**
-     * @return
-     */
-    @Override
-    public Optional<NativeWebRequest> getRequest() {
-        return WishlistApi.super.getRequest();
+    private final WishlistService wishlistService;
+    private final AuthService authService;
+    private final UserService userService;
+
+    public WishlistController(WishlistService wishlistService, AuthService authService, UserService userService) {
+        this.wishlistService = wishlistService;
+        this.authService = authService;
+        this.userService = userService;
     }
 
-    /**
-     * GET /wishlist : Récupère la wishlist de l&#39;utilisateur connecté
-     *
-     * @param authorization Bearer token JWT (required)
-     * @return Wishlist récupérée (status code 200)
-     * or Non autorisé (status code 403)
-     */
     @Override
     public ResponseEntity<Wishlist> wishlistGet(String authorization) {
-        return WishlistApi.super.wishlistGet(authorization);
+        if (!authService.isAuthenticated(authorization)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        UserEntity user = userService.toEntity(authService.getCurrentUser(authorization));
+        Wishlist wishlistDto = wishlistService.getWishlist(user);
+        return ResponseEntity.ok(wishlistDto);
     }
 
-    /**
-     * POST /wishlist : Ajoute un produit à la wishlist
-     *
-     * @param authorization Bearer token JWT (required)
-     * @param product       (required)
-     * @return Produit ajouté à la wishlist (status code 200)
-     * or Non autorisé (status code 403)
-     */
     @Override
-    public ResponseEntity<Wishlist> wishlistPost(String authorization, Product product) {
-        return WishlistApi.super.wishlistPost(authorization, product);
+    public ResponseEntity<Wishlist> wishlistPost(String authorization, Product productDto) {
+        if (!authService.isAuthenticated(authorization)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        UserEntity user = userService.toEntity(authService.getCurrentUser(authorization));
+        Wishlist updatedWishlist = wishlistService.addProduct(user, productDto);
+        return ResponseEntity.ok(updatedWishlist);
     }
 }
-
