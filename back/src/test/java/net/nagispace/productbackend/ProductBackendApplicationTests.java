@@ -8,6 +8,5 @@ class ProductBackendApplicationTests {
     @Test
     void contextLoads() {
         assertTrue(true);
-        // TODO Mettre des vrai test unitaire
     }
 }
